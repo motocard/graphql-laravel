@@ -432,6 +432,10 @@ class GraphQL
                 $mutation,
                 $subscription
             ) {
+                if (!$this->config->get('graphql.lazyload_types', true)) {
+                    return null;
+                }
+
                 return match ($name) {
                     'Query' => $query,
                     'Mutation' => $mutation,
