@@ -413,6 +413,23 @@ class GraphQL
             $directives[$directive->name] = $directive;
         }
 
+        $typeLoader = null;
+
+        if ($this->config->get('graphql.lazyload_types', false)) {
+            $typeLoader = function ($name) use (
+                $query,
+                $mutation,
+                $subscription
+            ) {
+                return match ($name) {
+                    'Query' => $query,
+                    'Mutation' => $mutation,
+                    'Subscription' => $subscription,
+                    default => $this->type($name),
+                };
+            };
+        }
+
         return new Schema([
             'query' => $query,
             'mutation' => $mutation,
@@ -427,22 +444,7 @@ class GraphQL
 
                 return $types;
             },
-            'typeLoader' => function ($name) use (
-                $query,
-                $mutation,
-                $subscription
-            ) {
-                if (!$this->config->get('graphql.lazyload_types', true)) {
-                    return null;
-                }
-
-                return match ($name) {
-                    'Query' => $query,
-                    'Mutation' => $mutation,
-                    'Subscription' => $subscription,
-                    default => $this->type($name),
-                };
-            },
+            'typeLoader' => $typeLoader,
         ]);
     }
 
